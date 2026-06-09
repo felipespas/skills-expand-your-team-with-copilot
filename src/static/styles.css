@@ -267,6 +267,40 @@ section h3 {
   align-items: center;
 }
 
+.activity-share {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+.activity-share h5 {
+  color: var(--primary);
+  margin-bottom: 6px;
+  font-size: 0.8em;
+}
+
+.share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.share-button {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 4px 8px;
+  border-radius: 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.share-button:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-text);
+  border-color: var(--primary-dark);
+}
+
 /* Buttons */
 .register-button {
   background: linear-gradient(145deg, var(--secondary), var(--secondary-dark));

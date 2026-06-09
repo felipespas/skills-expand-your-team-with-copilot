@@ -472,6 +472,69 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function getActivityShareData(name, details) {
+    const shareUrl = new URL(window.location.href);
+    shareUrl.searchParams.set("activity", name);
+
+    const title = `${name} at Mergington High School`;
+    const text = `Check out "${name}" at Mergington High School! ${details.description}`;
+
+    return {
+      title,
+      text,
+      url: shareUrl.toString(),
+    };
+  }
+
+  async function handleSocialShare(event) {
+    const { shareAction, activityName } = event.currentTarget.dataset;
+    const activityDetails = allActivities[activityName];
+
+    if (!activityDetails) {
+      showMessage("Unable to share this activity right now.", "error");
+      return;
+    }
+
+    const { title, text, url } = getActivityShareData(activityName, activityDetails);
+
+    if (shareAction === "x") {
+      const shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        text
+      )}&url=${encodeURIComponent(url)}`;
+      window.open(shareLink, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (shareAction === "facebook") {
+      const shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        url
+      )}`;
+      window.open(shareLink, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (shareAction === "copy") {
+      try {
+        await navigator.clipboard.writeText(url);
+        showMessage("Share link copied to clipboard!", "success");
+      } catch (error) {
+        console.error("Clipboard copy failed:", error);
+        showMessage("Couldn't copy the share link.", "error");
+      }
+      return;
+    }
+
+    if (shareAction === "native" && navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Native share failed:", error);
+        }
+      }
+    }
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -519,6 +582,32 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    const shareButtons = `
+      <div class="activity-share">
+        <h5>Share this activity:</h5>
+        <div class="share-buttons">
+          <button class="share-button" data-share-action="x" data-activity-name="${name}" aria-label="Share ${name} on X">
+            X
+          </button>
+          <button class="share-button" data-share-action="facebook" data-activity-name="${name}" aria-label="Share ${name} on Facebook">
+            Facebook
+          </button>
+          <button class="share-button" data-share-action="copy" data-activity-name="${name}" aria-label="Copy share link for ${name}">
+            Copy Link
+          </button>
+          ${
+            navigator.share
+              ? `
+            <button class="share-button" data-share-action="native" data-activity-name="${name}" aria-label="Open share options for ${name}">
+              More
+            </button>
+          `
+              : ""
+          }
+        </div>
+      </div>
+    `;
+
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
@@ -552,6 +641,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      ${shareButtons}
       <div class="activity-card-actions">
         ${
           currentUser
@@ -575,6 +665,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
     deleteButtons.forEach((button) => {
       button.addEventListener("click", handleUnregister);
+    });
+
+    const shareButtonsElements = activityCard.querySelectorAll(".share-button");
+    shareButtonsElements.forEach((button) => {
+      button.addEventListener("click", handleSocialShare);
     });
 
     // Add click handler for register button (only when authenticated)
